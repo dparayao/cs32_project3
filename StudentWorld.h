@@ -37,13 +37,18 @@ public:
     
     //mutators
     void addActor(Actor* holdActor);
+    void addActorToFront(Actor* holdActor);
     void addText(string text);
-
+    void writePowers();
+    
+    //helpful
+    int returnRandomDir();
 private:
     list<Actor*> actorList;
     int numActors;
     Peach* mainChar;
     ostringstream gameText;
+    string whatPowers = "";
 };
 
 #endif // STUDENTWORLD_H_

@@ -21,6 +21,7 @@ public:
     virtual ~Actor() {};
     virtual void doSomething() = 0;
     virtual void bonk() {};
+    virtual void getsHit() {};
     
     //accessors
     bool isAlive();
@@ -229,6 +230,59 @@ private:
     StudentWorld* p_world;
 };
 
+class Shell: public Projectile
+{
+public:
+    Shell(StudentWorld* sw, int startX, int startY, int startDir): Projectile(sw, IID_SHELL, startX, startY, startDir)
+    {
+        s_world = sw;
+    };
+    virtual ~Shell() {};
+private:
+    StudentWorld* s_world;
+};
+
+class movingEnemy: public Actor
+{
+public:
+    movingEnemy(StudentWorld* sw, int imgID, int startX, int startY, int startDir): Actor(imgID, startX, startY, startDir, true, 0, 1.0, false, true)
+    {
+        e_world = sw;
+    }
+    virtual ~movingEnemy() {};
+    void bonk();
+    void doSomething();
+    void getsHit();
+    virtual void afterHit() {};
+private:
+    StudentWorld* e_world;
+};
+
+class Koopa: public movingEnemy
+{
+public:
+    Koopa(StudentWorld* sw, int startX, int startY, int startDir): movingEnemy(sw, IID_KOOPA, startX, startY, startDir)
+    {
+        k_world = sw;
+    };
+    virtual ~Koopa() {};
+    void afterHit();
+private:
+    StudentWorld* k_world;
+};
+
+class Goomba: public movingEnemy
+{
+public:
+    Goomba(StudentWorld* sw, int startX, int startY, int startDir): movingEnemy(sw, IID_GOOMBA, startX, startY, startDir)
+    {
+        g_world = sw;
+    };
+    virtual ~Goomba() {};
+private:
+    StudentWorld* g_world;
+};
+
 //class declarations for peach class
 class Peach: public Actor
 {
@@ -241,12 +295,17 @@ public:
         shootPower = false;
         jumpPower = false;
         starPower = false;
+        ifInvincible = false;
+        ifTempInvincible = false;
+        starPowerTimeLeft = 0;
+        tempInTimeLeft = 0;
     };
     virtual ~Peach() {};
     
     //gameplay functions
     void doSomething();
     void jump();
+    void bonk();
     
     //accessors
     int ifShootPower();
@@ -255,6 +314,8 @@ public:
     
     //mutators
     void setPower(int power);
+    void setStarPower(int time);
+    void setHP(int newHP);
 private:
     StudentWorld* p_world;
     int hp;
@@ -262,8 +323,13 @@ private:
     bool shootPower;
     bool jumpPower;
     bool starPower;
+    bool ifInvincible;
+    bool ifTempInvincible;
     //determines if peach is in recharge mode
     int time_to_recharge_before_next_fire;
+    //determines time left for star power
+    int starPowerTimeLeft;
+    int tempInTimeLeft;
 };
 
 

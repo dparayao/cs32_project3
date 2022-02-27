@@ -121,13 +121,19 @@ void movingActors::movement()
 
 void Goodie::doSomething()
 {
-    if(g_world->isPeachAt(getX(), getY()))
+    int checkX = getX();
+    
+    if(getDirection() == 0)
+    {
+        checkX += SPRITE_WIDTH - 1;
+    }
+    
+    if(g_world->isPeachAt(checkX, getY()))
     {
         g_world->playSound(SOUND_PLAYER_POWERUP);
         givePowerUp();
         //set peach's hit points to 2
         setAliveStatus(false);
-        g_world->playSound(SOUND_PLAYER_POWERUP);
         return;
     }
     else
@@ -150,6 +156,7 @@ void Goodie::meetsBlock()
 
 void Mushroom::givePowerUp()
 {
+    m_world->givePeach()->setHP(2);
     //increase player's score by 75 points
     m_world->increaseScore(75);
     //tell peach object it has jump power
@@ -159,6 +166,7 @@ void Mushroom::givePowerUp()
 
 void Flower::givePowerUp()
 {
+    f_world->givePeach()->setHP(2);
     //increase player's score by 50 points
     f_world->increaseScore(50);
     //tell peach object it has shoot power
@@ -168,23 +176,132 @@ void Flower::givePowerUp()
 
 void Star::givePowerUp()
 {
+    s_world->givePeach()->setHP(2);
     //increase player's score by 100 points
     s_world->increaseScore(100);
     //tell peach object it has star power for 150 game ticks
     s_world->givePeach()->setPower(3);
+    s_world->givePeach()->setStarPower(150);
     return;
 }
 
 void Projectile::doSomething()
 {
-    movement();
-    return;
+    int checkX = getX();
+    
+    if(getDirection() == 0)
+    {
+        checkX += SPRITE_WIDTH - 1;
+    }
+    
+    Actor* whosThere = p_world->damageableObjectAt(checkX, getY());
+    
+    if(whosThere != nullptr)
+    {
+        whosThere->getsHit();
+        setAliveStatus(false);
+        return;
+    }
+    else
+    {
+        movement();
+    }
+
 }
 
 void Projectile::meetsBlock()
 {
     setAliveStatus(false);
     return;
+}
+
+void movingEnemy::doSomething()
+{
+    //if enemy is not alive, return immediately
+    if(isAlive()==false)
+    {
+        return;
+    }
+    
+    //checks if overlaps w peach - if it does, bonks and returns
+    int checkX = getX();
+    
+    if(getDirection() == 0)
+    {
+        checkX += SPRITE_WIDTH - 1;
+    }
+    
+    if(e_world->isPeachAt(checkX, getY()))
+    {
+        e_world->givePeach()->bonk();
+        return;
+    }
+    
+    //checks to see if it can move without getting blocked
+    if(getDirection() == 0)
+    {
+        if(e_world->objectBlockingAt(checkX + 1, getY()) || !e_world->objectBlockingAt(checkX+1, getY()-1))
+        {
+            setDirection(180);
+        }
+    }
+    else if(getDirection() == 180)
+    {
+        if(e_world->objectBlockingAt(checkX - 1, getY()) || !e_world->objectBlockingAt(checkX-1, getY()-1))
+        {
+            setDirection(0);
+        }
+    }
+    
+    //attempts to move
+    if(getDirection() == 0)
+    {
+        if(e_world->objectBlockingAt(checkX + 1, getY()))
+        {
+            return;
+        }
+        else
+        {
+            moveTo(getX() + 1, getY());
+        }
+    }
+    else if(getDirection() == 180)
+    {
+        if(e_world->objectBlockingAt(checkX-1, getY()))
+        {
+            return;
+        }
+        else
+        {
+            moveTo(getX() - 1, getY());
+        }
+    }
+    
+    return;
+}
+
+void movingEnemy::getsHit()
+{
+    e_world->increaseScore(100);
+    setAliveStatus(false);
+    afterHit();
+}
+
+void movingEnemy::bonk()
+{
+    if(e_world->givePeach()->ifStarPower() == true)
+    {
+        e_world->playSound(SOUND_PLAYER_KICK);
+        e_world->increaseScore(100);
+        setAliveStatus(false);
+    }
+}
+
+void Koopa::afterHit()
+{
+    //add shell to beginning of vector so it won't be iterated during current tick
+    Shell *holdShell = new Shell(k_world, getX(), getY(), getDirection());
+    k_world->addActorToFront(holdShell);
 }
 
 void Peach::jump()
@@ -209,14 +326,31 @@ void Peach::jump()
 void Peach::doSomething()
 {
     //if peach is not alive, return immediately
-    /*TO-DO: has issue, defaults to false
     if(isAlive()==false)
     {
-        cout << "not alive" << endl;
+        return;
     }
-     */
+     
+    //checking if she is invisible
+    if(ifInvincible == true)
+    {
+        starPowerTimeLeft--;
+    }
+    if(starPowerTimeLeft == 0)
+    {
+        ifInvincible = false;
+    }
     
-    //TO DO: check if she has power, add to screen at top
+    //checking if she is temp invincible
+    //checking if she is invisible
+    if(ifTempInvincible == true)
+    {
+        tempInTimeLeft--;
+    }
+    if(tempInTimeLeft == 0)
+    {
+        ifTempInvincible = false;
+    }
     
     //checking if she is in recharge mode
     if(time_to_recharge_before_next_fire > 0)
@@ -224,12 +358,26 @@ void Peach::doSomething()
         time_to_recharge_before_next_fire--;
     }
     
+    //check if she overlaps another object
+    int checkX = getX();
+    if(getDirection() == 0)
+    {
+        checkX += SPRITE_WIDTH - 1;
+    }
+    Actor* who = p_world->objectAt(checkX, getY());
+    if(who != nullptr)
+    {
+        who->bonk();
+    }
+    
+    //if she has jump distance left, jumps
     if(remaining_jump_distance > 0)
     {
         jump();
     }
     else
     {
+        //if not, falls if needed
         Actor* ifBlock = nullptr;
         
         for(int i = 0; i <= 3; i++)
@@ -248,8 +396,8 @@ void Peach::doSomething()
         }
     }
     
+    //checking/initiating movement
     int whatDir = 0;
-    
     //checking if/what keystroke was pressed
     if(p_world->getKey(whatDir))
     {
@@ -351,6 +499,30 @@ int Peach::ifStarPower()
     return starPower;
 }
 
+void Peach::bonk()
+{
+    if(ifInvincible == true || ifTempInvincible == true)
+    {
+        return;
+    }
+    else
+    {
+        hp--;
+        tempInTimeLeft = 10;
+        shootPower = false;
+        jumpPower = false;
+        
+        if(hp >= 1)
+        {
+            p_world->playSound(SOUND_PLAYER_HURT);
+        }
+        else if(hp == 0)
+        {
+            setAliveStatus(false);
+        }
+    }
+}
+
 void Peach::setPower(int power)
 {
     //1 means mushroom power
@@ -360,12 +532,25 @@ void Peach::setPower(int power)
     {
         case 1:
             jumpPower = true;
+            ifTempInvincible = true;
             break;
         case 2:
             shootPower = true;
+            ifTempInvincible = true;
             break;
         case 3:
             starPower = true;
+            ifInvincible = true;
             break;
     }
+}
+
+void Peach::setStarPower(int time)
+{
+    starPowerTimeLeft = time;
+}
+
+void Peach::setHP(int newHP)
+{
+    hp = newHP;
 }

@@ -88,6 +88,18 @@ int StudentWorld::init()
                         actorList.push_back(holdSB);
                         break;
                     }
+                    case Level::koopa:
+                    {
+                        Koopa *holdKoopa = new Koopa(this, i*SPRITE_HEIGHT, j*SPRITE_WIDTH, returnRandomDir());
+                        actorList.push_back(holdKoopa);
+                        break;
+                    }
+                    case Level::goomba:
+                    {
+                        Goomba *holdGoomba = new Goomba(this, i*SPRITE_HEIGHT, j*SPRITE_WIDTH, returnRandomDir());
+                        actorList.push_back(holdGoomba);
+                        break;
+                    }
                 }
             }
         }
@@ -101,7 +113,8 @@ int StudentWorld::init()
 int StudentWorld::move()
 {
     gameText.str("");
-    gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore();
+    writePowers();
+    gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore() << " " << whatPowers;
     setGameStatText(gameText.str());
     
     //asks peach to do something
@@ -159,6 +172,33 @@ Actor* StudentWorld::objectAt(int x, int y)
         {
             if(y <= (a_y + SPRITE_WIDTH - 1) && y >= a_y)
             {
+                return *it;
+            }
+        }
+    }
+
+    //if it doesn't find an object at that location, return false
+    return nullptr;
+}
+
+Actor* StudentWorld::objectBlockingAt(int x, int y)
+{
+    //iterates through actor list
+    for(list<Actor*>::iterator it = actorList.begin(); it != actorList.end(); it++)
+    {
+        int a_x;
+        int a_y;
+        
+        //checks for actor's coordinates
+        a_x = (*it)->getX();
+        a_y = (*it)->getY();
+        
+        //if it matches, return the actor who's hitbox overlaps
+        //if(x <= (a_x + SPRITE_WIDTH - 1) && x > a_x)
+        if(x <= (a_x + SPRITE_WIDTH - 1) && x >= a_x)
+        {
+            if(y <= (a_y + SPRITE_WIDTH - 1) && y >= a_y)
+            {
                 if((*it)->isBlocking()==true)
                 {
                     return *it;
@@ -171,40 +211,34 @@ Actor* StudentWorld::objectAt(int x, int y)
     return nullptr;
 }
 
-Actor* StudentWorld::objectBlockingAt(int x, int y)
-{
-    Actor* whosThere = objectAt(x, y);
-    
-    if(whosThere == nullptr)
-    {
-        return nullptr;
-    }
-    else if(whosThere->isBlocking() == true)
-    {
-        return whosThere;
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
 Actor* StudentWorld::damageableObjectAt(int x, int y)
 {
-    Actor* whosThere = objectAt(x, y);
-    
-    if(whosThere == nullptr)
+    //iterates through actor list
+    for(list<Actor*>::iterator it = actorList.begin(); it != actorList.end(); it++)
     {
-        return nullptr;
+        int a_x;
+        int a_y;
+        
+        //checks for actor's coordinates
+        a_x = (*it)->getX();
+        a_y = (*it)->getY();
+        
+        //if it matches, return the actor who's hitbox overlaps
+        //if(x <= (a_x + SPRITE_WIDTH - 1) && x > a_x)
+        if(x <= (a_x + SPRITE_WIDTH - 1) && x >= a_x)
+        {
+            if(y <= (a_y + SPRITE_WIDTH - 1) && y >= a_y)
+            {
+                if((*it)->isDamageable()==true)
+                {
+                    return *it;
+                }
+            }
+        }
     }
-    else if(whosThere->isDamageable() == true)
-    {
-        return whosThere;
-    }
-    else
-    {
-        return nullptr;
-    }
+
+    //if it doesn't find an object at that location, return false
+    return nullptr;
 }
 
 bool StudentWorld::isPeachAt(int x, int y)
@@ -236,8 +270,47 @@ void StudentWorld::addActor(Actor *holdActor)
     actorList.push_back(holdActor);
 }
 
+void StudentWorld::addActorToFront(Actor* holdActor)
+{
+    actorList.push_front(holdActor);
+}
+
 void StudentWorld::addText(string text)
 {
     gameText << text;
     
+}
+
+void StudentWorld::writePowers()
+{
+    whatPowers = "";
+    
+    if(mainChar->ifStarPower())
+    {
+        whatPowers += "StarPower! ";
+    }
+    if(mainChar->ifJumpPower())
+    {
+        whatPowers += "JumpPower! ";
+    }
+    if(mainChar->ifShootPower())
+    {
+        whatPowers += "ShootPower! ";
+    }
+}
+
+int StudentWorld::returnRandomDir()
+{
+    int chooseDir = randInt(0, 1);
+    int actualDir;
+    if(chooseDir == 0)
+    {
+        actualDir = 0;
+    }
+    else
+    {
+        actualDir = 180;
+    }
+    
+    return actualDir;
 }
