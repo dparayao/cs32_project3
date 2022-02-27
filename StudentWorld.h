@@ -22,7 +22,9 @@ public:
     virtual int init();
     virtual int move();
     virtual void cleanUp();
-    bool objectBlockingAt(int x, int y);
+    Actor* objectBlockingAt(int x, int y);
+    bool isPeachAt(int x, int y);
+    void addActor(Actor* holdActor);
 
 private:
     list<Actor*> actorList;
