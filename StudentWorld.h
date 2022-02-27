@@ -34,12 +34,16 @@ public:
     
     //accessors
     Peach* givePeach();
+    bool getLevelStatus();
+    bool getGameStatus();
     
     //mutators
     void addActor(Actor* holdActor);
     void addActorToFront(Actor* holdActor);
     void addText(string text);
     void writePowers();
+    void changeLevelStatus(bool status);
+    void changeGameStatus(bool status);
     
     //helpful
     int returnRandomDir();
@@ -49,6 +53,8 @@ private:
     Peach* mainChar;
     ostringstream gameText;
     string whatPowers = "";
+    bool ifFinishLevel = false;
+    bool ifFinishGame = false;
 };
 
 #endif // STUDENTWORLD_H_

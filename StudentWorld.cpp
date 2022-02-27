@@ -21,6 +21,26 @@ StudentWorld::~StudentWorld()
     cleanUp();
 }
 
+bool StudentWorld::getLevelStatus()
+{
+    return ifFinishLevel;
+}
+
+bool StudentWorld::getGameStatus()
+{
+    return ifFinishGame;
+}
+
+void StudentWorld::changeLevelStatus(bool status)
+{
+    ifFinishLevel = status;
+}
+
+void StudentWorld::changeGameStatus(bool status)
+{
+    ifFinishGame = status;
+}
+
 int StudentWorld::init()
 {
     //int curLevel = getLevel();
@@ -28,6 +48,9 @@ int StudentWorld::init()
     Level lev(assetPath());
     string level_file = "level01.txt";
     Level::LoadResult result = lev.loadLevel(level_file);
+    
+    ifFinishLevel = false;
+    ifFinishGame = false;
     
     gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore();
     
@@ -100,12 +123,28 @@ int StudentWorld::init()
                         actorList.push_back(holdGoomba);
                         break;
                     }
+                    case Level::piranha:
+                    {
+                        Piranha *holdPiranha = new Piranha(this, i*SPRITE_HEIGHT, j*SPRITE_WIDTH, returnRandomDir());
+                        actorList.push_back(holdPiranha);
+                        break;
+                    }
+                    case Level::flag:
+                    {
+                        Flag *holdFlag = new Flag(this, IID_FLAG, i*SPRITE_HEIGHT, j*SPRITE_WIDTH);
+                        actorList.push_back(holdFlag);
+                        break;
+                    }
+                    case Level::mario:
+                    {
+                        Mario *holdMario = new Mario(this, i*SPRITE_HEIGHT, j*SPRITE_WIDTH);
+                        actorList.push_back(holdMario);
+                        break;
+                    }
                 }
             }
         }
     }
-    
-    //for each coordinate, check what object is there and store it
     
     return GWSTATUS_CONTINUE_GAME;
 }
@@ -126,6 +165,14 @@ int StudentWorld::move()
         if((*it)->isAlive() == true)
         {
             (*it)->doSomething();
+            
+            if(mainChar->isAlive() == false)
+            {
+                playSound(SOUND_PLAYER_DIE);
+                decLives();
+                return GWSTATUS_PLAYER_DIED;
+            }
+            
             it++;
         }
         else if((*it)->isAlive() == false)
@@ -133,6 +180,18 @@ int StudentWorld::move()
             delete *it;
             it = actorList.erase(it);
         }
+    }
+    
+    if(getLevelStatus() == true)
+    {
+        playSound(SOUND_FINISHED_LEVEL);
+        return GWSTATUS_FINISHED_LEVEL;
+    }
+    
+    if(getGameStatus() == true)
+    {
+        playSound(SOUND_GAME_OVER);
+        return GWSTATUS_PLAYER_WON;
     }
     
     return GWSTATUS_CONTINUE_GAME;

@@ -212,7 +212,7 @@ public:
         p_world = sw;
     };
     virtual ~Projectile() {};
-    void doSomething();
+    virtual void doSomething();
     void meetsBlock();
 private:
     StudentWorld* p_world;
@@ -242,6 +242,19 @@ private:
     StudentWorld* s_world;
 };
 
+class PiranhaFireball: public Projectile
+{
+public:
+    PiranhaFireball(StudentWorld* sw, int startX, int startY, int startDir): Projectile(sw, IID_PIRANHA_FIRE, startX, startY, startDir)
+    {
+        p_world = sw;
+    };
+    virtual ~PiranhaFireball() {};
+    void doSomething();
+private:
+    StudentWorld* p_world;
+};
+
 class movingEnemy: public Actor
 {
 public:
@@ -252,6 +265,7 @@ public:
     virtual ~movingEnemy() {};
     void bonk();
     void doSomething();
+    virtual void attemptMove();
     void getsHit();
     virtual void afterHit() {};
 private:
@@ -281,6 +295,46 @@ public:
     virtual ~Goomba() {};
 private:
     StudentWorld* g_world;
+};
+
+class Piranha: public movingEnemy
+{
+public:
+    Piranha(StudentWorld* sw, int startX, int startY, int startDir): movingEnemy(sw, IID_PIRANHA, startX, startY, startDir)
+    {
+        p_world = sw;
+        firingDelay = 0;
+    };
+    virtual ~Piranha() {};
+    void attemptMove();
+private:
+    StudentWorld* p_world;
+    int firingDelay;
+};
+
+class Flag: public Actor
+{
+public:
+    Flag(StudentWorld* sw, int imgID, int startX, int startY): Actor(imgID, startX, startY, 0, true, 1, 1.0, false, false)
+    {
+        f_world = sw;
+    };
+private:
+    StudentWorld* f_world;
+    void doSomething();
+    virtual void informGame();
+};
+
+class Mario: public Flag
+{
+public:
+    Mario(StudentWorld* sw, int startX, int startY): Flag(sw, IID_MARIO, startX, startY)
+    {
+        m_world = sw;
+    };
+private:
+    StudentWorld* m_world;
+    void informGame();
 };
 
 //class declarations for peach class

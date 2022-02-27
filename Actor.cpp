@@ -215,6 +215,28 @@ void Projectile::meetsBlock()
     return;
 }
 
+void PiranhaFireball::doSomething()
+{
+    int checkX = getX();
+    
+    if(getDirection() == 0)
+    {
+        checkX += SPRITE_WIDTH - 1;
+    }
+    
+    if(p_world->isPeachAt(checkX, getY()) == true)
+    {
+        p_world->givePeach()->bonk();
+        setAliveStatus(false);
+        return;
+        
+    }
+    else
+    {
+        movement();
+    }
+}
+
 void movingEnemy::doSomething()
 {
     //if enemy is not alive, return immediately
@@ -235,6 +257,20 @@ void movingEnemy::doSomething()
     {
         e_world->givePeach()->bonk();
         return;
+    }
+    
+    attemptMove();
+    
+    return;
+}
+
+void movingEnemy::attemptMove()
+{
+    int checkX = getX();
+    
+    if(getDirection() == 0)
+    {
+        checkX += SPRITE_WIDTH - 1;
     }
     
     //checks to see if it can move without getting blocked
@@ -277,7 +313,6 @@ void movingEnemy::doSomething()
         }
     }
     
-    return;
 }
 
 void movingEnemy::getsHit()
@@ -304,6 +339,74 @@ void Koopa::afterHit()
     k_world->addActorToFront(holdShell);
 }
 
+//TO DO: fix fireball/height thing ??
+void Piranha::attemptMove()
+{
+    increaseAnimationNumber();
+    
+    //tries to determine where peach is
+    int peachY = p_world->givePeach()->getY();
+    int peachX = p_world->givePeach()->getX();
+    int peachTop = peachY + SPRITE_HEIGHT - 1;
+    
+    //if true, peach is on same level
+    if(getY() <= peachTop && peachTop <= getY() + (1.5*SPRITE_HEIGHT) )
+    {
+        //checks if peach is on left or right
+        if(peachX < getX())
+        {
+            //left - set direction to left
+            setDirection(180);
+        }
+        else if(peachX > getX())
+        {
+            setDirection(0);
+        }
+    }
+    else
+    {
+        //not same level - return false
+        return;
+    }
+    
+    //checks for firing delay
+    if(firingDelay > 0)
+    {
+        firingDelay--;
+        return;
+    }
+    else if(firingDelay == 0)
+    {
+        //calculate peach's distance
+        //based on distance, decide to create pirhana fireball or not
+        if(getDirection() == 0)
+        {
+            if(peachX < getX() + 8*SPRITE_WIDTH)
+            {
+                PiranhaFireball* holdPF = new PiranhaFireball(p_world, getX(), getY(), getDirection());
+                p_world->addActor(holdPF);
+                //play sound
+                p_world->playSound(SOUND_PIRANHA_FIRE);
+                //set firing delay to 40
+                firingDelay = 40;
+            }
+        }
+        else if(getDirection() == 180)
+        {
+            if(peachX > getX() - 8*SPRITE_WIDTH)
+            {
+                PiranhaFireball* holdPF = new PiranhaFireball(p_world, getX(), getY(), getDirection());
+                p_world->addActor(holdPF);
+                //play sound
+                p_world->playSound(SOUND_PIRANHA_FIRE);
+                //set firing delay to 40
+                firingDelay = 40;
+            }
+            
+        }
+    }
+}
+
 void Peach::jump()
 {
     int topHitbox = getY() + SPRITE_HEIGHT - 1;
@@ -321,6 +424,36 @@ void Peach::jump()
         remaining_jump_distance = 0;
     }
     
+}
+
+void Flag::doSomething()
+{
+    if(isAlive() == false)
+    {
+        return;
+    }
+    
+    int checkX = getX() + SPRITE_WIDTH - 1;;
+    
+    //doesn't do anything unless overlaps w peach
+    //if overlaps, increases score and tells game to load next level
+    if(f_world->isPeachAt(checkX, getY()) == true)
+    {
+        f_world->increaseScore(1000);
+        setAliveStatus(false);
+        informGame();
+        return;
+    }
+}
+
+void Flag::informGame()
+{
+    f_world->changeLevelStatus(true);
+}
+
+void Mario::informGame()
+{
+    m_world->changeGameStatus(true);
 }
 
 void Peach::doSomething()
