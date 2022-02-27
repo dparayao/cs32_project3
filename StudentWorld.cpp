@@ -1,6 +1,5 @@
 #include "StudentWorld.h"
 #include "GameConstants.h"
-#include <string>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetPath)
@@ -29,6 +28,11 @@ int StudentWorld::init()
     Level lev(assetPath());
     string level_file = "level01.txt";
     Level::LoadResult result = lev.loadLevel(level_file);
+    
+    gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore();
+    
+    setGameStatText(gameText.str());
+    
     if (result == Level::load_fail_file_not_found)
     {
         cerr << "Could not find level01.txt data file" << endl;
@@ -72,6 +76,18 @@ int StudentWorld::init()
                         actorList.push_back(holdMB);
                         break;
                     }
+                    case Level::flower_goodie_block:
+                    {
+                        FlowerBlock *holdFB = new FlowerBlock(this, i*SPRITE_HEIGHT, j*SPRITE_WIDTH);
+                        actorList.push_back(holdFB);
+                        break;
+                    }
+                    case Level::star_goodie_block:
+                    {
+                        StarBlock *holdSB = new StarBlock(this, i*SPRITE_HEIGHT, j*SPRITE_WIDTH);
+                        actorList.push_back(holdSB);
+                        break;
+                    }
                 }
             }
         }
@@ -84,6 +100,10 @@ int StudentWorld::init()
 
 int StudentWorld::move()
 {
+    gameText.str("");
+    gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore();
+    setGameStatText(gameText.str());
+    
     //asks peach to do something
     mainChar->doSomething();
     
@@ -107,6 +127,7 @@ int StudentWorld::move()
 
 void StudentWorld::cleanUp()
 {
+    //TO DO: FIX DESTRUCTORS
     //deletes peach
     delete mainChar;
     mainChar = nullptr;
@@ -115,11 +136,12 @@ void StudentWorld::cleanUp()
     for(list<Actor*>::iterator it = actorList.begin(); it != actorList.end(); it++)
     {
         delete (*it);
-        it = actorList.erase(it);
+        //it = actorList.erase(it);
     }
+    actorList.clear();
 }
 
-Actor* StudentWorld::objectBlockingAt(int x, int y)
+Actor* StudentWorld::objectAt(int x, int y)
 {
     //iterates through actor list
     for(list<Actor*>::iterator it = actorList.begin(); it != actorList.end(); it++)
@@ -149,6 +171,42 @@ Actor* StudentWorld::objectBlockingAt(int x, int y)
     return nullptr;
 }
 
+Actor* StudentWorld::objectBlockingAt(int x, int y)
+{
+    Actor* whosThere = objectAt(x, y);
+    
+    if(whosThere == nullptr)
+    {
+        return nullptr;
+    }
+    else if(whosThere->isBlocking() == true)
+    {
+        return whosThere;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+Actor* StudentWorld::damageableObjectAt(int x, int y)
+{
+    Actor* whosThere = objectAt(x, y);
+    
+    if(whosThere == nullptr)
+    {
+        return nullptr;
+    }
+    else if(whosThere->isDamageable() == true)
+    {
+        return whosThere;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
 bool StudentWorld::isPeachAt(int x, int y)
 {
     int p_x;
@@ -168,7 +226,18 @@ bool StudentWorld::isPeachAt(int x, int y)
     return false;
 }
 
+Peach* StudentWorld::givePeach()
+{
+    return mainChar;
+}
+
 void StudentWorld::addActor(Actor *holdActor)
 {
     actorList.push_back(holdActor);
+}
+
+void StudentWorld::addText(string text)
+{
+    gameText << text;
+    
 }

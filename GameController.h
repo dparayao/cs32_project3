@@ -88,4 +88,4 @@ inline GameController& Game()
     return GameController::getInstance();
 }
 
-#endif // GAMECONTROLLER_H_
+#endif // GAMECONTROLLER_H_\j

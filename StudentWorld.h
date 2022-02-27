@@ -6,6 +6,9 @@
 #include "Actor.h"
 #include <string>
 #include <list>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -22,14 +25,25 @@ public:
     virtual int init();
     virtual int move();
     virtual void cleanUp();
+    
+    //finding objects at
+    Actor* objectAt(int x, int y);
     Actor* objectBlockingAt(int x, int y);
+    Actor* damageableObjectAt(int x, int y);
     bool isPeachAt(int x, int y);
+    
+    //accessors
+    Peach* givePeach();
+    
+    //mutators
     void addActor(Actor* holdActor);
+    void addText(string text);
 
 private:
     list<Actor*> actorList;
     int numActors;
     Peach* mainChar;
+    ostringstream gameText;
 };
 
 #endif // STUDENTWORLD_H_
