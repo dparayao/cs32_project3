@@ -43,16 +43,30 @@ void StudentWorld::changeGameStatus(bool status)
 
 int StudentWorld::init()
 {
-    //int curLevel = getLevel();
-    //load in level
     Level lev(assetPath());
-    string level_file = "level01.txt";
-    Level::LoadResult result = lev.loadLevel(level_file);
+    
+    int curLevel = getLevel();
+    ostringstream levelPath;
+    levelPath << "level";
+    levelPath.fill('0');
+    levelPath << setw(2);
+    levelPath << to_string(curLevel);
+    levelPath << ".txt";
+    
+    //load in level
+    string level_file = "";
+    cout << "LEVEL: " << levelPath.str();
+    //level_file += levelPath;
+    Level::LoadResult result = lev.loadLevel(levelPath.str());
     
     ifFinishLevel = false;
     ifFinishGame = false;
     
-    gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore();
+    gameText << " Lives: " << getLives();
+    gameText << " Level: " << getLevel();
+    gameText.fill('0');
+    gameText << setw(6);
+    gameText << " Points: " << getScore();
     
     setGameStatText(gameText.str());
     
@@ -151,9 +165,28 @@ int StudentWorld::init()
 
 int StudentWorld::move()
 {
+    if(mainChar->isAlive() == false)
+    {
+        playSound(SOUND_PLAYER_DIE);
+        decLives();
+        return GWSTATUS_PLAYER_DIED;
+    }
+    
     gameText.str("");
     writePowers();
-    gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore() << " " << whatPowers;
+    gameText << " Lives: " << getLives() << " Level: " << getLevel() << " Points: " << getScore() << " ";
+    if(mainChar->ifShootPower())
+    {
+        gameText << "ShootPower! ";
+    }
+    if(mainChar->ifJumpPower())
+    {
+        gameText << "JumpPower! ";
+    }
+    if(mainChar->ifStarPower())
+    {
+        gameText << "StarPower! ";
+    }
     setGameStatText(gameText.str());
     
     //asks peach to do something

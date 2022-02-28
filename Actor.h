@@ -142,7 +142,6 @@ public:
         m_world = sw;
     };
     virtual ~movingActors() {};
-    void doSomething() = 0;
     void movement();
     virtual void meetsBlock() = 0;
 private:
@@ -158,7 +157,6 @@ public:
     };
     virtual ~Goodie() {};
     void doSomething();
-    //give power up function, called by above function, will be pure virtual
     virtual void givePowerUp() = 0;
     void meetsBlock();
 private:
@@ -362,9 +360,9 @@ public:
     void bonk();
     
     //accessors
-    int ifShootPower();
-    int ifJumpPower();
-    int ifStarPower();
+    bool ifShootPower();
+    bool ifJumpPower();
+    bool ifStarPower();
     
     //mutators
     void setPower(int power);

@@ -176,7 +176,6 @@ void Flower::givePowerUp()
 
 void Star::givePowerUp()
 {
-    s_world->givePeach()->setHP(2);
     //increase player's score by 100 points
     s_world->increaseScore(100);
     //tell peach object it has star power for 150 game ticks
@@ -256,10 +255,13 @@ void movingEnemy::doSomething()
     if(e_world->isPeachAt(checkX, getY()))
     {
         e_world->givePeach()->bonk();
+        attemptMove();
         return;
     }
-    
-    attemptMove();
+    else
+    {
+        attemptMove();
+    }
     
     return;
 }
@@ -347,10 +349,10 @@ void Piranha::attemptMove()
     //tries to determine where peach is
     int peachY = p_world->givePeach()->getY();
     int peachX = p_world->givePeach()->getX();
-    int peachTop = peachY + SPRITE_HEIGHT - 1;
+    //int peachTop = peachY + SPRITE_HEIGHT - 1;
     
     //if true, peach is on same level
-    if(getY() <= peachTop && peachTop <= getY() + (1.5*SPRITE_HEIGHT) )
+    if(getY() >= peachY && getY()-peachY <= (1.5*SPRITE_HEIGHT-1) )
     {
         //checks if peach is on left or right
         if(peachX < getX())
@@ -592,6 +594,7 @@ void Peach::doSomething()
             {
                 if(ifShootPower() == true)
                 {
+                    cerr << "shoot" << endl;
                     if(time_to_recharge_before_next_fire <= 0)
                     {
                         p_world->playSound(SOUND_PLAYER_FIRE);
@@ -617,23 +620,25 @@ void Peach::doSomething()
     return;
 }
 
-int Peach::ifShootPower()
+bool Peach::ifShootPower()
 {
     return shootPower;
 }
 
-int Peach::ifJumpPower()
+bool Peach::ifJumpPower()
 {
     return jumpPower;
 }
 
-int Peach::ifStarPower()
+bool Peach::ifStarPower()
 {
     return starPower;
 }
 
 void Peach::bonk()
 {
+    p_world->playSound(SOUND_PLAYER_HURT);
+    
     if(ifInvincible == true || ifTempInvincible == true)
     {
         return;
@@ -641,18 +646,25 @@ void Peach::bonk()
     else
     {
         hp--;
-        tempInTimeLeft = 10;
-        shootPower = false;
-        jumpPower = false;
         
-        if(hp >= 1)
+        if(ifShootPower() == true)
         {
-            p_world->playSound(SOUND_PLAYER_HURT);
+            shootPower = false;
+            ifTempInvincible = true;
+            tempInTimeLeft = 10;
         }
-        else if(hp == 0)
+        if(ifJumpPower() == true)
+        {
+            shootPower = false;
+            ifTempInvincible = true;
+            tempInTimeLeft = 10;
+        }
+        
+        if(hp == 0)
         {
             setAliveStatus(false);
         }
+        
     }
 }
 
@@ -665,11 +677,9 @@ void Peach::setPower(int power)
     {
         case 1:
             jumpPower = true;
-            ifTempInvincible = true;
             break;
         case 2:
             shootPower = true;
-            ifTempInvincible = true;
             break;
         case 3:
             starPower = true;
